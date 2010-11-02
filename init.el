@@ -317,26 +317,38 @@ to the requested country"
 (defun cnu-app-restart ()
   "Restarts the cnuapp services."
   (interactive)
-  (let ((result (shell-command-to-string "sudo sv d /var/service/* && sudo sv u /var/service/*")))
-    (if (= 0 (length result))
-	(message "Success: The app is now being restarted")
-      (error "Failed: Unable to restart the app. Error: %s" result))))
+  ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
+  ; I found it on a google group post.
+  (with-temp-buffer
+    (cd "/sudo::/")
+    (let ((result (shell-command-to-string "sudo sv d /var/service/* && sudo sv u /var/service/*")))
+      (if (= 0 (length result))
+	  (message "Success: The app is now being restarted")
+	(error "Failed: Unable to restart the app. Error: %s" result)))))
 
 (defun cnu-app-stop ()
   "Stops the cnuapp services."
   (interactive)
-  (let ((result (shell-command-to-string "sudo sv d /var/service/*")))
-    (if (= 0 (length result))
-	(message "Success: The app is now being stopped")
-      (error "Failed: Unable to restart the app. Error: %s" result))))
+  ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
+  ; I found it on a google group post.
+  (with-temp-buffer
+    (cd "/sudo::/")
+    (let ((result (shell-command-to-string "sudo sv d /var/service/*")))
+      (if (= 0 (length result))
+	  (message "Success: The app is now being stopped")
+	(error "Failed: Unable to restart the app. Error: %s" result)))))
 
 (defun cnu-app-start ()
   "Starts the cnuapp services."
   (interactive)
-  (let ((result (shell-command-to-string "sudo sv u /var/service/*")))
-    (if (= 0 (length result))
-	(message "Success: The app is now being started")
-      (error "Failed: Unable to restart the app. Error: %s" result))))
+  ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
+  ; I found it on a google group post.
+  (with-temp-buffer
+    (cd "/sudo::/")
+    (let ((result (shell-command-to-string "sudo sv u /var/service/*")))
+      (if (= 0 (length result))
+	  (message "Success: The app is now being started")
+	(error "Failed: Unable to restart the app. Error: %s" result)))))
 
 (define-prefix-command 'cnu-command)
 (global-set-key (kbd "M-c") 'cnu-command)
