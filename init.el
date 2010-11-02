@@ -287,68 +287,22 @@
 	  'ansi-color-for-comint-mode-on)
 
 
-
-;; Use the p4 plugin I created
-;; Required settings.
-(setq p4-user-name "hstrowd")
-(setq p4-client-name "hstrowd.cnuapp.dev")
-
-;; Load the plugin
+;; ---------------------  my-p4 -------------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/my-p4")
 (require 'my-p4)
 
+;; Required settings for this plugin.
+(setq p4-user-name "hstrowd")
+(setq p4-client-name "hstrowd.cnuapp.dev")
+
+;; Key-bindings for P4 commands.
 (global-set-key (kbd "M-p M-c") 'p4-check-out)
 (global-set-key (kbd "M-p M-r") 'p4-rebase)
 
 
-
-;; CNU Utilities
-(defun cnu-change-env (country)
-  "Changes the symlink for the /etc/cnu/cnu_env file to point
-to the requested country"
-  (interactive "MCountry: ")
-  (let ((country-file (format "/etc/cnu/cnu_env.%s" (upcase country))))
-    (if (file-exists-p country-file)
-	(progn
-	  (call-process "ln" nil "*Message*" nil "-fs" country-file "/etc/cnu/cnu_env")
-	  (message "Success: Changed environment to %s" country-file))
-      (error "Failed: File '%s' does not exist." country-file))))
-
-(defun cnu-app-restart ()
-  "Restarts the cnuapp services."
-  (interactive)
-  ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
-  ; I found it on a google group post.
-  (with-temp-buffer
-    (cd "/sudo::/")
-    (let ((result (shell-command-to-string "sudo sv d /var/service/* && sudo sv u /var/service/*")))
-      (if (= 0 (length result))
-	  (message "Success: The app is now being restarted")
-	(error "Failed: Unable to restart the app. Error: %s" result)))))
-
-(defun cnu-app-stop ()
-  "Stops the cnuapp services."
-  (interactive)
-  ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
-  ; I found it on a google group post.
-  (with-temp-buffer
-    (cd "/sudo::/")
-    (let ((result (shell-command-to-string "sudo sv d /var/service/*")))
-      (if (= 0 (length result))
-	  (message "Success: The app is now being stopped")
-	(error "Failed: Unable to restart the app. Error: %s" result)))))
-
-(defun cnu-app-start ()
-  "Starts the cnuapp services."
-  (interactive)
-  ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
-  ; I found it on a google group post.
-  (with-temp-buffer
-    (cd "/sudo::/")
-    (let ((result (shell-command-to-string "sudo sv u /var/service/*")))
-      (if (= 0 (length result))
-	  (message "Success: The app is now being started")
-	(error "Failed: Unable to restart the app. Error: %s" result)))))
+;;------------------  cnuapp-utils-----------------------
+(add-to-list 'load-path "~/.emacs.d/plugins/cnuapp-utils")
+(require 'cnuapp-utils)
 
 (define-prefix-command 'cnu-command)
 (global-set-key (kbd "M-c") 'cnu-command)
