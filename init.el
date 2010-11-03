@@ -314,16 +314,36 @@ to the requested country"
 	  (message "Success: Changed environment to %s" country-file))
       (error "Failed: File '%s' does not exist." country-file))))
 
-;; TODO: Fix this. Figure out how to prompt for the sudo password. it happens in the shell buffer.
 (defun cnu-app-restart ()
-  "Restarts cnuapp."
+  "Restarts the cnuapp services."
   (interactive)
-  (call-process "svr" nil "*Message*" nil))
+  (let ((result (shell-command-to-string "sudo sv d /var/service/* && sudo sv u /var/service/*")))
+    (if (= 0 (length result))
+	(message "Success: The app is now being restarted")
+      (error "Failed: Unable to restart the app. Error: %s" result))))
 
+(defun cnu-app-stop ()
+  "Stops the cnuapp services."
+  (interactive)
+  (let ((result (shell-command-to-string "sudo sv d /var/service/*")))
+    (if (= 0 (length result))
+	(message "Success: The app is now being stopped")
+      (error "Failed: Unable to restart the app. Error: %s" result))))
+
+(defun cnu-app-start ()
+  "Starts the cnuapp services."
+  (interactive)
+  (let ((result (shell-command-to-string "sudo sv u /var/service/*")))
+    (if (= 0 (length result))
+	(message "Success: The app is now being started")
+      (error "Failed: Unable to restart the app. Error: %s" result))))
 
 (define-prefix-command 'cnu-command)
 (global-set-key (kbd "M-c") 'cnu-command)
 (global-set-key (kbd "M-c M-e") 'cnu-change-env)
+(global-set-key (kbd "M-c M-r") 'cnu-app-restart)
+(global-set-key (kbd "M-c M--") 'cnu-app-stop)
+(global-set-key (kbd "M-c M-+") 'cnu-app-start)
 
-
+;; Dev utilities
 ;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/
