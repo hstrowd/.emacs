@@ -298,6 +298,7 @@
 (require 'my-p4)
 
 (global-set-key (kbd "M-p M-c") 'p4-check-out)
+(global-set-key (kbd "M-p M-r") 'p4-rebase)
 
 
 
@@ -308,9 +309,21 @@ to the requested country"
   (interactive "MCountry: ")
   (let ((country-file (format "/etc/cnu/cnu_env.%s" (upcase country))))
     (if (file-exists-p country-file)
-	(call-process "ln" nil "*Message*" nil "-fs" country-file "/etc/cnu/cnu_env")
-      (error "File '%s' does not exist." country-file))))
+	(progn
+	  (call-process "ln" nil "*Message*" nil "-fs" country-file "/etc/cnu/cnu_env")
+	  (message "Success: Changed environment to %s" country-file))
+      (error "Failed: File '%s' does not exist." country-file))))
+
+;; TODO: Fix this. Figure out how to prompt for the sudo password. it happens in the shell buffer.
+(defun cnu-app-restart ()
+  "Restarts cnuapp."
+  (interactive)
+  (call-process "svr" nil "*Message*" nil))
+
 
 (define-prefix-command 'cnu-command)
 (global-set-key (kbd "M-c") 'cnu-command)
 (global-set-key (kbd "M-c M-e") 'cnu-change-env)
+
+
+;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/
