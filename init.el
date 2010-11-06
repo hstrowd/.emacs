@@ -299,6 +299,9 @@
 (global-set-key (kbd "M-p M-e") 'p4-edit)
 (global-set-key (kbd "M-p M--") 'p4-revert)
 (global-set-key (kbd "M-p M-r") 'p4-rebase)
+(global-set-key (kbd "M-p M-c") 'p4-create-changelist)
+(global-set-key (kbd "M-p M-m") 'p4-mark-to-branch)
+(global-set-key (kbd "M-p M-b") 'p4-branch-files)
 
 
 ;;------------------  cnuapp-utils-----------------------
