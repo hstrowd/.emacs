@@ -296,7 +296,7 @@
 (setq p4-client-name "hstrowd.cnuapp.dev")
 
 ;; Key-bindings for P4 commands.
-(global-set-key (kbd "M-p M-e") 'p4-check-out)
+(global-set-key (kbd "M-p M-e") 'p4-edit)
 (global-set-key (kbd "M-p M--") 'p4-revert)
 (global-set-key (kbd "M-p M-r") 'p4-rebase)
 
