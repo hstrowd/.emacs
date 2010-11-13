@@ -5,12 +5,12 @@
 (setq p4-tmp-buf-name "*p4-tmp*")
 (setq p4-state-file "/home/cnuapp/.emacs.d/plugins/my-p4/p4.state")
 (setq p4-chglst-tmplt "/home/cnuapp/.emacs.d/plugins/my-p4/p4-init-changelist")
-(setq p4-chglst-file-prefix "/home/cnuapp/.emacs.d/plugins/my-p4/changelist-specs/chnglst.")
+(setq p4-chglst-file-prefix "/home/cnuapp/.emacs.d/plugins/my-p4/changelist-specs/chglst.")
 (setq p4-chglst-file-postfix ".log")
 (setq p4-branch-backup-dir "/home/cnuapp/.emacs.d/plugins/my-p4/branch-backups/")
 
 
-;; ------------ Helper Functions --------------
+;; -------- General Helper Functions ----------
 
 (defun convert-web-to-comp-stable (file-path)
   "Converts a file in /export/web/... to /export/comp/stable/...
@@ -54,28 +54,46 @@ An error is thrown in any of the following circumstances:
       (error "Failed: Unable to identify the latest revision synced of: %s.\nError: %s" 
 	     local-file have-result))))
 
-(defun p4-get-bug-branch-path (rel-path-to-file bug-branch)
-  "Identifies the path to the specified file on the provided bug branch."
-  (concat "//depot/cnuapp/bug/" bug-branch "/" rel-path-to-file))
+(defun p4-new-changelist (client-name user-name bug-branch source-branch issue-number)
+  "Creates a new p4 changelist and returns it's id number.
 
-(defun p4-new-change (changelist-content-file)
-  "Creates a new p4 changelist and returns the number.
 An error is thrown in any of the following circumstances:
-  - The changelist is not able to be created."
-  ; Construct a new p4 changelist.
-  (with-temp-buffer
-    ; This must use call-process, because it needs to have input provided in a file.
-    (call-process "p4" changelist-content-file (current-buffer) nil "change" "-i")
-    ; Identify the id number of the newly created changelist.
-    (goto-char (point-max))
-    (if (re-search-backward "Change [0-9]+ created." nil t)
-	(progn
-	  (goto-char (+ (point) 7))
-	  (set-mark (point))
-	  (re-search-forward "[0-9]+")
-	  (buffer-substring (mark) (point)))
-      (error "P4 new change: Unable to create a changelist. Error: %s" (buffer-substring (point-min) (point-max))))))
+  - If a new changelist is unable to be created."
+  (let ((p4-chglst-buffer (find-file-noselect p4-chglst-tmplt))
+	(p4-chglst-file (concat p4-chglst-file-prefix 
+				issue-number "-" 
+				(format-time-string "%Y%m%d%H%M%S") 
+				p4-chglst-file-postfix)))
+    (save-excursion
+      ; Create the changelist file for this change.
+      (set-buffer p4-chglst-buffer)
+      (replace-all "<client-name>" client-name)
+      (replace-all "<user-name>" user-name)
+      (replace-all "<bug-branch>" bug-branch)
+      (replace-all "<source-branch>" source-branch)
+      (replace-all "<issue-number>" issue-number)
+      (write-region (point-min) (point-max) p4-chglst-file nil nil nil t)
 
+      ; Revert the changelist template and close the buffer.
+      (revert-buffer t t)
+      (kill-buffer p4-chglst-buffer)
+
+      ; Construct a new p4 changelist.
+      (with-temp-buffer
+        ; This must use call-process, because it needs to have input provided in a file.
+	(call-process "p4" p4-chglst-file (current-buffer) nil "change" "-i")
+        ; Identify the id number of the newly created changelist.
+	(goto-char (point-max))
+	(if (re-search-backward "Change [0-9]+ created." nil t)
+	    (progn
+	      (goto-char (+ (point) 7))
+	      (set-mark (point))
+	      (re-search-forward "[0-9]+")
+	      (buffer-substring (mark) (point)))
+	  (error "P4 new change: Unable to create a changelist. Error: %s" (buffer-substring (point-min) (point-max))))))))
+
+
+;; ------ State File Helper Functions --------
 
 (setq active-changelist-key "active_changelist")
 (setq files-to-branch-key "files_to_branch")
@@ -224,43 +242,6 @@ An error is thrown in any of the following circumstances:
 		   cur-sync-depot-file
 		   integrate-result)))))))
 
-(defun p4-create-changelist (issue-number)
-  "Creates a new changelist to be used by the my-p4 plugin.
-
-An error is thrown in any of the following circumstances:
-  - If an active changelist already exist.
-  - If a new changelist is unable to be created."
-  (interactive "MIssue number: ")
-  (let ((p4-chglst-buffer (find-file-noselect p4-chglst-tmplt))
-	(p4-chglst-file (concat p4-chglst-file-prefix 
-				issue-number "-" 
-				(format-time-string "%Y%m%d%H%M%S") 
-				p4-chglst-file-postfix))
-	(active-changelist (p4-state-get active-changelist-key))
-	(bug-branch (concat issue-number "_sparse")))
-    (if active-changelist
-	(error "The my-p4 changelist is already set to: %s" active-changelist))
-
-    (save-excursion
-      ; Create the changelist file for this change.
-      (set-buffer p4-chglst-buffer)
-      (replace-all "<client-name>" p4-client-name)
-      (replace-all "<user-name>" p4-user-name)
-      (replace-all "<bug-branch>" bug-branch)
-      (replace-all "<source-branch>" "comp/stable")
-      (replace-all "<issue-number>" issue-number)
-      (write-region (point-min) (point-max) p4-chglst-file nil nil nil t)
-
-      ; Revert the changelist template and close the buffer.
-      (revert-buffer t t)
-      (kill-buffer p4-chglst-buffer)
-
-      ; Construct the changelist and store it in the p4 state file.
-      (let ((changelist-num (p4-new-change p4-chglst-file)))
-	(p4-state-set active-changelist-key changelist-num)
-	(p4-state-set bug-branch-key bug-branch)
-	(message "Success: Created and saved changelist: %s" changelist-num)))))
-
 (defun p4-mark-to-branch ()
   "Marks the file corresponding to the current buffer to be branched
 as part of the active changelist.
@@ -284,8 +265,20 @@ This list of files is stored in the my-p4 state file."
   (interactive)
   (p4-state-set files-to-branch-key ""))
 
+(defun p4-show-files-to-branch ()
+  "Displays the list of files to be branched in the active changelist."
+  (interactive)
+  (let ((files-to-branch (p4-state-get files-to-branch-key)))
+    (if files-to-branch
+	(message "The following files will be branched:\n  - %s"
+		 (mapconcat 'identity 
+			    (split-string files-to-branch "," t)
+			    "\n  - "))
+      (message "There are currently no files to be branched."))))
+
 ;; TODO: test this under all conditions.
-(defun p4-branch-filse ()
+; TODO: check if any files are set to be branched.
+(defun p4-branch-files ()
   "Branches all files currently stored in the my-p4 plugin state file
 under the 'files_to_branch' field to the branch specified by the active
 changelist of the my-p4 plugin.
@@ -293,84 +286,122 @@ changelist of the my-p4 plugin.
 Note: This is not intended to branch deletions.
 
 This will result in an error if:
-  - There is no active changelist.
-  - If there is an error in copying the files to the backup directory."
+  - No files have been marked to be branched.
+  - If there is an error in copying the files to the backup directory.
+  - If there is an error in reverting the files currently edited.
+  - If there is an error in integrating the files to the specified bug branch.
+  - If there is an error in submitting the changes involved in this branching.
+  - If there is an error in openning the files for edit in the bug branch.
+  - If there is an error in copying the files from the backup to the source tree."
+
   (interactive)
-  ; Identify the files currently marked to be branched.
-  (let ((files-to-branch (p4-state-get files-to-branch-key))
-	(branch (p4-state-get bug-branch-key))
-	(active-changelist (p4-state-get active-changelist-key))
-    (dolist (file files-to-branch)
-      (let ((local-file (format "/export/comp/stable/%s" file))
-	    (backup-file ((concat p4-branch-backup-dir
-				  "/"
-			          branch "-" (format-time-string "%Y%m%d%H%M%S")
-				  "/"
-				  file)))
-	    (dest-depot-path (p4-get-bug-branch-path file branch)))
+  ; Verify that there are in fact files to be branched.
+  (let ((files-to-branch-str (p4-state-get files-to-branch-key)))
+    (if (not files-to-branch-str)
+	(error "Failed: No files have been marked to be branched."))
 
-        ; Copy each file to be branched to a temporary directory.
-	(let ((copy-result (shell-command-to-string "cp %s %s" local-file backup-file)))
-	  (if (/= 0 (length copy-result))
-	      (error "Failed: Unable to copy file %s to the backup directory (%s).\nError: %s"
-		     file p4-branch-backup-dir copy-result)))
+    ; Prompt for the issue number to which these files will be branched.
+    (let ((files-to-branch-list (split-string files-to-branch-str "," t))
+	  (issue (read-from-minibuffer "Issue: "))
+	  (timestamp (format-time-string "%Y%m%d%H%M%S")))
 
-        ; Revert each file to be branched.
-	(let ((revert-result (shell-command-to-string "p4 revert %s" local-file)))
-	  (if (not (string-match (format "%s#[0-9]+ - was edit, reverted" file)
-				 revert-result))
-	      (error "Failed: Unable to revert file %s.\nError: %s"
-		     file revert-result)))
+      ; Create a changelist to branch files to this issue
+      (let ((changelist-num (p4-new-changelist p4-client-name p4-user-name 
+					       (concat issue "_sparse") "comp/stable"
+					       issue)))
 
-        ; Integrate each file to be branched to the bug branch.
-	(let ((integrate-result 
-	       (shell-command-to-string "p4 integrate -3 -c %s %s %s" 
-					active-changelit local-file dest-depot-path)))
-	  ; TODO: figure out what this regex should be.
-;	  (if (not (string-match (format "%s#[0-9]+ - ??? %s" file dest-depot-path)
-;				 integrate-result))
-;	      (error "Failed: Unable to integrate file %s to %s.\nError: %s"
-;		     file dest-depot-path integrate-result))
-      )))
+	(p4-branch-pre-submit files-to-branch-list issue changelist-num timestamp)
 
-    ; Submit the changelist containing the branching of each file.
-    (let ((submit-result (shell-command-to-string "p4 submit -c %s" active-changelist)))
+        ; Submit the changelist containing the branching of each file.
+	(let ((submit-result (shell-command-to-string (format "p4 submit -c %s" changelist-num))))
+	  (message "Submit result: " submit-result)
       ; TODO: figure out what this regex should be.
 ;      (if (not (string-match "???" submit-result))
 ;	  (error "Failed: Unable to sumbit changelist %s.\nError: %s"
 ;		 active-changelist submit-result))
-      (p4-state-set active-changelist-key ""))
+	  )
  
+	(p4-branch-post-submit files-to-branch-list issue timestamp)
+	
+	(message "Success: The following files have been checked out to issue %s:\n - %s" 
+		 issue
+		 (mapconcat 'identity files_to_branch-list "\n  - "))))))
 
-    (dolist (file files-to-branch)
+;; TODO: Document this function
+(defun p4-branch-pre-submit (files issue changelist timestamp)
+  ""
+  (dolist (file files)
+    ; Backup the file by copying it into a temporary location.
       (let ((local-file (format "/export/comp/stable/%s" file))
-	    (backup-file ((concat p4-branch-backup-dir
-				  "/"
-			          branch "-" (format-time-string "%Y%m%d%H%M%S")
-				  "/"
-				  file)))
-	    (dest-depot-path (p4-get-bug-branch-path file branch)))
-
-        ; Check out the files on the bug branch.
-	(let ((edit-result (shell-command-to-string "p4 edit %s" dest-depot-path)))
-	  (if (not (string-match (format "%s#[0-9]+ - opened for edit" edit-result)))
-	      (error "Failed: Unable to open file %s for edit.\nError: %s"
-		     dest-depot-pathedit-result)))
-
-        ; Copy the files back into the source tree.
-	(let ((copy-result (shell-command-to-string "cp %s %s" backup-file local-file)))
+	    (backup-file (concat p4-branch-backup-dir
+			       issue "-" timestamp
+			       "/" file)))
+	; Create all necessary directories to store the backup file.
+	(let ((backup-dir (mapconcat 'identity (butlast (split-string backup-file "/")) "/")))
+	  (make-directory backup-dir t))
+	
+        ; Copy each file to be branched to a temporary directory.
+	(message "about to copy: %s" (format "cp %s %s" local-file backup-file))
+	(let ((copy-result (shell-command-to-string (format "cp %s %s" local-file backup-file))))
 	  (if (/= 0 (length copy-result))
-	      (error "Failed: Unable to copy file %s from the backup directory (%s) into the source tree.\nError: %s"
-		     file p4-branch-backup-dir copy-result)))
+	      (error "Failed: Unable to copy file %s to the backup directory (%s).\nError: %s"
+		     file p4-branch-backup-dir copy-result))))
 
-	; Reload the buffer that corresponds to the name of this file, if one exists.
-	(save-excursion
-	  (set-buffer (find-buffer-visiting local-file))
-	  (revert-buffer t t))
+      ; Integrate the file to the bug branch.
+      (let ((comp-stable-depot-path (format "//depot/cnuapp/comp/stable/%s" file))
+	    (dest-depot-path (concat "//depot/cnuapp/bug/" issue "_sparse/" file)))
 
-        ; Remove all relevant variables from p4 state.
-	(p4-state-set files-to-branch-key "")
-	(p4-state-set bug-branch-key "")
-      )))))
+        ; TODO: Test this if the file isn't currently openned for edit.
+        ; Revert each file to be branched.
+	(let ((revert-result (shell-command-to-string (format "p4 revert %s" comp-stable-depot-path))))
+	  (if (not (or (string-match (format "%s#[0-9]+ - was edit, reverted" file) revert-result)
+		       (string-match (format "%s - file(s) not opened on this client." file) revert-result)))
+	      (error "Failed: Unable to revert file %s.\nError: %s"
+		     file revert-result)))
+
+	; Remove the file from the workspace.
+	(let ((sync-result (shell-command-to-string (format "p4 sync %s#none" comp-stable-depot-path))))
+	  (if (not (string-match (format "%s#[0-9]+ - deleted as " comp-stable-depot-path)
+				 sync-result))
+	      (error "Failed: Unable to remove file %s from the workspace.\nError: %s"
+		     file sync-result)))
+
+        ; Integrate each file to be branched to the bug branch.
+	(let ((integrate-result 
+	       (shell-command-to-string (format "p4 integrate -3 -c %s %s %s" 
+						changelist comp-stable-depot-path dest-depot-path))))
+	  (if (not (string-match (format "%s#[0-9]+ - branch/sync from %s" dest-depot-path comp-stable-depot-path)
+				 integrate-result))
+	      (error "Failed: Unable to integrate file %s to %s.\nError: %s"
+		     file dest-depot-path integrate-result))))))
+
+;; TODO:
+(defun p4-branch-post-submit (files issue timestamp)
+  ""
+  (dolist (file files)
+    (let ((local-file (format "/export/comp/stable/%s" file))
+	  (backup-file ((concat p4-branch-backup-dir
+				issue "-" timestamp
+				"/"
+				file)))
+	  (dest-depot-path (concat "//depot/cnuapp/bug/" issue "_sparse/" file)))
+      
+      ; Check out the files on the bug branch.
+      (let ((edit-result (shell-command-to-string (format "p4 edit %s" dest-depot-path))))
+	(if (not (string-match (format "%s#[0-9]+ - opened for edit" edit-result)))
+	    (error "Failed: Unable to open file %s for edit.\nError: %s"
+		   dest-depot-pathedit-result)))
+
+      ; Copy the files back into the source tree.
+      (let ((copy-result (shell-command-to-string (format "cp %s %s" backup-file local-file))))
+	(if (/= 0 (length copy-result))
+	    (error "Failed: Unable to copy file %s from the backup directory (%s) into the source tree.\nError: %s"
+		   file p4-branch-backup-dir copy-result)))
+
+      ; Reload the buffer that corresponds to the name of this file, if one exists.
+      (save-excursion
+	(set-buffer (find-buffer-visiting local-file))
+	(revert-buffer t t)))))
+
 
 (provide 'my-p4)
