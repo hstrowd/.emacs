@@ -287,6 +287,7 @@
 	  'ansi-color-for-comint-mode-on)
 
 
+
 ;; ---------------------  my-p4 -------------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/my-p4")
 (require 'my-p4)
@@ -311,9 +312,12 @@
 (define-prefix-command 'cnu-command)
 (global-set-key (kbd "M-c") 'cnu-command)
 (global-set-key (kbd "M-c M-e") 'cnu-change-env)
+
 (global-set-key (kbd "M-c M-r") 'cnu-app-restart)
 (global-set-key (kbd "M-c M--") 'cnu-app-stop)
 (global-set-key (kbd "M-c M-+") 'cnu-app-start)
+
+(global-set-key (kbd "M-c M-a M-c") 'cnu-auto-clean-house)
 
 ;; Dev utilities
 ;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/
