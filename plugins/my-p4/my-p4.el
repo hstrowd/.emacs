@@ -107,7 +107,6 @@ nil is returned."
   (let 	((p4-state-buffer (find-file p4-state-file)))
     (save-excursion 
       ; Identify the value corresponding to the provided key.
-      ;; TODO: update this to use setq
       (set-buffer p4-state-buffer)
       (save-excursion
 	; Find the position of the key in the state file.
@@ -141,7 +140,6 @@ If the key is not found, it is added to the file."
     (save-excursion 
       ; Identify the location of the provided key in the p4 state 
       ; file.
-      ;; TODO: update this to use setq
       (set-buffer p4-state-buffer)
       (save-excursion
 	(goto-char (point-min))
@@ -242,6 +240,8 @@ An error is thrown in any of the following circumstances:
 		   cur-sync-depot-file
 		   integrate-result)))))))
 
+
+
 (defun p4-mark-to-branch ()
   "Marks the file corresponding to the current buffer to be branched
 as part of the active changelist.
@@ -251,12 +251,46 @@ An error is thrown in any of the following circumstances:
   (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
     ; Verify that this file is in fact within the source tree.
     (if (equal (substring local-file 0 20) "/export/comp/stable/")
-	(let ((rel-file-path (substring local-file 20)))
-	  ; TODO: Check if the file is already in the list.
+	(let ((rel-file-path (substring local-file 20))
+	      (files-to-branch (split-string (p4-state-get files-to-branch-key) ",")))
+	  ; Check if the file is already in the list.
+	  (while (> (length files-to-branch) 0)
+	    (if (equal rel-file-path (pop files-to-branch))
+		(progn 
+		  (message "File %s is already in the list of files to be branched.")
+		  (return))))
           ; Append this file to the end of the list of files to be branch.
-	  (p4-state-push files-to-branch-key rel-file-path)
+	  (p4-state-set files-to-branch-key (concat (p4-state-get files-to-branch-key) rel-file-path p4-list-separator))
 	  (message "Success: File %s was added to the list of files to be branched."
 		   local-file))
+      (error "Failed: File not in p4 client.\nProvided file: %s" local-file))))
+
+(defun p4-remove-file-to-branch ()
+  "Removes the file corresponding to the current buffer from the list of
+files to be branched as part of the active changelist.
+An error is thrown in any of the following circumstances:
+  - The current buffer does not correspond to a file in the p4 client."
+  (interactive)
+  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
+    ; Verify that this file is in fact within the source tree.
+    (if (equal (substring local-file 0 20) "/export/comp/stable/")
+	(let ((rel-file-path (substring local-file 20))
+	      (prev-files-to-branch (split-string (p4-state-get files-to-branch-key) ","))
+	      (new-files-to-branch '()))
+	  (let ((init-num-files (length prev-files-to-branch)))
+
+    	    ; Move all files except the current file to the new list
+	    (while (> (length prev-files-to-branch) 0)
+	      (if (not (equal rel-file-path (car prev-files-to-branch)))
+		  (push (pop prev-files-to-branch) new-files-to-branch)))
+
+	    ; Set the new list of files to be branched
+	    (p4-state-set (mapconcat 'identitiy new-files-to-branch p4-list-separartor))
+
+	    ; Check if any files were removed from the list
+	    (if (= init-num-files (length new-files-to-branch))
+		(message "File %s was not found in the list of files to be branched.")
+	      (message "Success: File %s was removed from the list of files to be branched."))))
       (error "Failed: File not in p4 client.\nProvided file: %s" local-file))))
 
 (defun p4-clear-files-to-branch ()
@@ -275,6 +309,8 @@ This list of files is stored in the my-p4 state file."
 			    (split-string files-to-branch "," t)
 			    "\n  - "))
       (message "There are currently no files to be branched."))))
+
+
 
 ;; TODO: test this under all conditions.
 ; TODO: check if any files are set to be branched.
@@ -375,7 +411,7 @@ This will result in an error if:
 	      (error "Failed: Unable to integrate file %s to %s.\nError: %s"
 		     file dest-depot-path integrate-result))))))
 
-;; TODO:
+;; TODO: Document this function
 (defun p4-branch-post-submit (files issue timestamp)
   ""
   (dolist (file files)
