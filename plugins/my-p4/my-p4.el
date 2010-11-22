@@ -103,7 +103,7 @@ An error is thrown in any of the following circumstances:
 (defun p4-state-get (key)
   "Returns the value stored in the p4 state file that corresponds
 to the provided key. If the key is not found or the value is empty, 
-nil is returned."
+\"\" is returned."
   (let 	((p4-state-buffer (find-file p4-state-file)))
     (save-excursion 
       ; Identify the value corresponding to the provided key.
@@ -123,7 +123,7 @@ nil is returned."
 		    (if (= 0 (length value))
 			(progn
 			  (message "P4 state lookup: %s value is empty." key)
-			  nil)
+			  "")
 		      value))
 		(message "P4 state lookup: No end ']' for %s value." key)
 		(kill-buffer p4-state-buffer)
@@ -257,8 +257,8 @@ An error is thrown in any of the following circumstances:
 	  (while (> (length files-to-branch) 0)
 	    (if (equal rel-file-path (pop files-to-branch))
 		(progn 
-		  (message "File %s is already in the list of files to be branched.")
-		  (return))))
+		  (message "File %s is already in the list of files to be branched." local-file)
+		  (return t))))
           ; Append this file to the end of the list of files to be branch.
 	  (p4-state-set files-to-branch-key (concat (p4-state-get files-to-branch-key) rel-file-path p4-list-separator))
 	  (message "Success: File %s was added to the list of files to be branched."
@@ -416,15 +416,16 @@ This will result in an error if:
   ""
   (dolist (file files)
     (let ((local-file (format "/export/comp/stable/%s" file))
-	  (backup-file ((concat p4-branch-backup-dir
+	  (backup-file (concat p4-branch-backup-dir
 				issue "-" timestamp
 				"/"
-				file)))
+				file))
 	  (dest-depot-path (concat "//depot/cnuapp/bug/" issue "_sparse/" file)))
       
       ; Check out the files on the bug branch.
       (let ((edit-result (shell-command-to-string (format "p4 edit %s" dest-depot-path))))
-	(if (not (string-match (format "%s#[0-9]+ - opened for edit" edit-result)))
+	(if (not (string-match (format "%s#[0-9]+ - opened for edit" edit-result) 
+			       edit-result))
 	    (error "Failed: Unable to open file %s for edit.\nError: %s"
 		   dest-depot-pathedit-result)))
 
