@@ -351,11 +351,14 @@ This will result in an error if:
 
         ; Submit the changelist containing the branching of each file.
 	(let ((submit-result (shell-command-to-string (format "p4 submit -c %s" changelist-num))))
-	  (if (/= 0 (length submit-result))
-	      (error "Failed: Unable to sumbit changelist %s.\nError: %s"
-		     changelist-num submit-result)))
+	  (message "Submit result: %s" submit-result))
+;	  (if (/= 0 (length submit-result))
+;	      (error "Failed: Unable to sumbit changelist %s.\nError: %s"
+;		     changelist-num submit-result)))
  
 	(p4-branch-post-submit files-to-branch-list issue timestamp)
+	
+	(p4-clear-files-to-branch)
 	
 	(message "Success: The following files have been checked out to issue %s:\n - %s" 
 		 issue
