@@ -179,7 +179,7 @@ An error is thrown in any of the following circumstances:
   (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
     ; Attempt to check-out the file
     (let ((edit-result (shell-command-to-string (format "p4 edit %s" local-file))))
-      (if (string-match "#[0-9]+ - opened for edit" 
+      (if (string-match "#[0-9]+ - \\(opened\\|reopened\\) for edit" 
 			edit-result)
           ; If successful, make the buffer read-only.
 	  (progn 
@@ -304,7 +304,8 @@ This list of files is stored in the my-p4 state file."
   "Displays the list of files to be branched in the active changelist."
   (interactive)
   (let ((files-to-branch (p4-state-get files-to-branch-key)))
-    (if files-to-branch
+    (if (and files-to-branch
+	     (not (= (length files-to-branch) 0)))
 	(message "The following files will be branched:\n  - %s"
 		 (mapconcat 'identity 
 			    (split-string files-to-branch "," t)
@@ -351,18 +352,18 @@ This will result in an error if:
 
         ; Submit the changelist containing the branching of each file.
 	(let ((submit-result (shell-command-to-string (format "p4 submit -c %s" changelist-num))))
-	  (message "Submit result: " submit-result)
-      ; TODO: figure out what this regex should be.
-;      (if (not (string-match "???" submit-result))
-;	  (error "Failed: Unable to sumbit changelist %s.\nError: %s"
-;		 active-changelist submit-result))
-	  )
+	  (message "Submit result: %s" submit-result))
+;	  (if (/= 0 (length submit-result))
+;	      (error "Failed: Unable to sumbit changelist %s.\nError: %s"
+;		     changelist-num submit-result)))
  
 	(p4-branch-post-submit files-to-branch-list issue timestamp)
 	
+	(p4-clear-files-to-branch)
+	
 	(message "Success: The following files have been checked out to issue %s:\n - %s" 
 		 issue
-		 (mapconcat 'identity files_to_branch-list "\n  - "))))))
+		 (mapconcat 'identity files-to-branch-list "\n  - "))))))
 
 ;; TODO: Document this function
 (defun p4-branch-pre-submit (files issue changelist timestamp)
@@ -425,10 +426,10 @@ This will result in an error if:
       
       ; Check out the files on the bug branch.
       (let ((edit-result (shell-command-to-string (format "p4 edit %s" dest-depot-path))))
-	(if (not (string-match (format "%s#[0-9]+ - opened for edit" edit-result) 
+	(if (not (string-match (format "%s#[0-9]+ - opened for edit" dest-depot-path) 
 			       edit-result))
 	    (error "Failed: Unable to open file %s for edit.\nError: %s"
-		   dest-depot-pathedit-result)))
+		   dest-depot-path edit-result)))
 
       ; Copy the files back into the source tree.
       (let ((copy-result (shell-command-to-string (format "cp %s %s" backup-file local-file))))
@@ -440,6 +441,5 @@ This will result in an error if:
       (save-excursion
 	(set-buffer (find-buffer-visiting local-file))
 	(revert-buffer t t)))))
-
 
 (provide 'my-p4)
