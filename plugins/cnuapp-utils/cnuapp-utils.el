@@ -15,8 +15,18 @@ to the requested country"
 	  (message "Success: Changed environment to %s" country-file))
       (error "Failed: File '%s' does not exist." country-file))))
 
+;; TODO: Finish this.
+(defun run-sudo-sv (cmd dir)
+  ""
+  ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
+  ; I found it on a google group post.
+  (cd "/sudo::/")
+  (let ((result (shell-command-to-string (format "sudo sv %s" cmd))))
+    (if (= 0 (length result))
+	(message "Success: The app is now being restarted")
+      (error "Failed: Unable to restart the app. Error: %s" result))))
 
-(defun cnu-app-restart ()
+(defun cnu-restart-app ()
   "Restarts the cnuapp services."
   (interactive)
   ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
@@ -28,7 +38,7 @@ to the requested country"
 	  (message "Success: The app is now being restarted")
 	(error "Failed: Unable to restart the app. Error: %s" result)))))
 
-(defun cnu-app-stop ()
+(defun cnu-stop-app ()
   "Stops the cnuapp services."
   (interactive)
   ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
@@ -40,7 +50,7 @@ to the requested country"
 	  (message "Success: The app is now being stopped")
 	(error "Failed: Unable to restart the app. Error: %s" result)))))
 
-(defun cnu-app-start ()
+(defun cnu-start-app ()
   "Starts the cnuapp services."
   (interactive)
   ; This uses TRAMP to run the sudo command. I'm not really sure how it works. 
@@ -60,7 +70,7 @@ to the requested country"
 
 (defun cnu-clean-house (&optional skip-p4-tmp skip-logs skip-test-results)
   "Deletes temporary files, cnuapp logs, and unit test results."
-  (interactive "MSkip p4 temporary files(y/n)? \nMSkip cnuapp logs(y/n)? \nMSkip-test-results")
+  (interactive "MSkip p4 temporary files(y/n)? \nMSkip cnuapp logs(y/n)? \nMSkip test results (y/n)?")
   (if (or (not skip-p4-tmp) 
 	  (equal (downcase skip-p4-tmp) "false")
 	  (equal (downcase skip-p4-tmp) "f")
@@ -78,7 +88,8 @@ to the requested country"
 	  (equal (downcase skip-p4-tmp) "f")
 	  (equal (downcase skip-p4-tmp) "no")
 	  (equal (downcase skip-p4-tmp) "n"))
-      (kill-cnuapp-unit-test-results)))
+      (kill-cnuapp-unit-test-results))
+  (message "Sucess: All temporary files have been deleted."))
 
 (defun kill-p4-temp-files ()
   "Deletes the following p4 temporary files, if found:
@@ -104,7 +115,7 @@ to the requested country"
   - space.d
   - lsws.d"
   (interactive)
-  (let ((rm-result (shell-command-to-string (format "rm %s*" cnuapp-log-dir))))
+  (let ((rm-result (shell-command-to-string (format "rm -r %s*" cnuapp-log-dir))))
     (if (rm-failed? rm-result) 
 	(error "Failed: Unable to clear cnuapp log directory: %s. Error: %s" 
 	       cnuapp-log-dir rm-result)))
