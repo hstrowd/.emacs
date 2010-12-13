@@ -64,6 +64,7 @@ An error is thrown in any of the following circumstances:
 				issue-number "-" 
 				(format-time-string "%Y%m%d%H%M%S") 
 				p4-chglst-file-postfix)))
+    ; TODO: check for existence of the directory. If not create it.
     (save-excursion
       ; Create the changelist file for this change.
       (set-buffer p4-chglst-buffer)
@@ -127,10 +128,10 @@ to the provided key. If the key is not found or the value is empty,
 		      value))
 		(message "P4 state lookup: No end ']' for %s value." key)
 		(kill-buffer p4-state-buffer)
-		nil))
+		""))
 	  (message "P4 state lookup: %s key not found." key)
 	  (kill-buffer p4-state-buffer)
-	  nil)))))
+	  "")))))
 
 (defun p4-state-set (key value)
   "Updates the value stored in the p4 state file that corresponds
