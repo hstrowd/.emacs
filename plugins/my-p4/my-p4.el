@@ -12,18 +12,17 @@
 
 ;; -------- General Helper Functions ----------
 
-;; Deprecated
-;(defun convert-web-to-comp-stable (file-path)
-;  "Converts a file in /export/web/... to /export/comp/stable/...
-;If the provided file is not under the /export/web/ directory it is
-;returned unchanged."
-;  (if (equal (substring file-path 0 12) "/export/web/")
-;      (concat "/export/comp/stable/" (substring file-path 12))
-;    file-path))
+(defun convert-web-to-comp-stable (file-path)
+  "Converts a file in /export/web/... to /export/comp/stable/...
+If the provided file is not under the /export/web/ directory it is
+returned unchanged."
+  (if (equal (substring file-path 0 12) "/export/web/")
+      (concat "/export/comp/stable/" (substring file-path 12))
+    file-path))
 
 (defun get-base-file (symlinked-file)
   "Identifies the location of the base file for the provided symlinked file."
-  (shell-command-to-string (format "readlink -f %s" symlinked-file)))
+  (chomp (shell-command-to-string (format "readlink -f %s" symlinked-file))))
 
 (defun clear-buffer (buffer-or-name)
   "Deletes all content from the provided buffer.
@@ -45,6 +44,11 @@ current buffer."
     (goto-char (point-min))
     (while (re-search-forward text nil t)
       (replace-match replacement nil t))))
+
+(defun chomp (str)
+  "Chomp leading and tailing whitespace from STR."
+  (let ((s (if (symbolp str) (symbol-name str) str)))
+    (replace-regexp-in-string "\\(^[[:space:]\n]*\\|[[:space:]\n]*$\\)" "" s)))
 
 (defun p4-get-depot-path (local-file)
   "Identifies the full depot path of the latest revision synced of the provided file.
@@ -255,9 +259,10 @@ as part of the active changelist.
 An error is thrown in any of the following circumstances:
   - The current buffer does not correspond to a file in the p4 client."
   (interactive)
-  (let ((local-file (get-base-file (buffer-file-name))))
+  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
+    (message "found file %s" local-file)
     ; Verify that this file is in fact within the source tree.
-    (if (equal (substring local-file 0 8) "/export/")
+    (if (equal (substring local-file 0 20) "/export/comp/stable/")
 	(let ((rel-file-path (substring local-file 20))
 	      (files-to-branch (split-string (p4-state-get files-to-branch-key) ",")))
 	  ; Check if the file is already in the list.
@@ -278,7 +283,7 @@ files to be branched as part of the active changelist.
 An error is thrown in any of the following circumstances:
   - The current buffer does not correspond to a file in the p4 client."
   (interactive)
-  (let ((local-file (get-base-file (buffer-file-name))))
+  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
     ; Verify that this file is in fact within the source tree.
     (if (equal (substring local-file 0 20) "/export/comp/stable/")
 	(let ((rel-file-path (substring local-file 20))
@@ -304,7 +309,8 @@ An error is thrown in any of the following circumstances:
   "Clears the list of files to be branched in the active changelist.
 This list of files is stored in the my-p4 state file."
   (interactive)
-  (p4-state-set files-to-branch-key ""))
+  (p4-state-set files-to-branch-key "")
+  (message "Success: There are no files to be branched"))
 
 (defun p4-show-files-to-branch ()
   "Displays the list of files to be branched in the active changelist."
@@ -376,10 +382,11 @@ This will result in an error if:
   ""
   (dolist (file files)
     ; Backup the file by copying it into a temporary location.
-      (let ((local-file (format "/export/comp/stable/%s" file))
+      (let ((local-file (format "/export/web/%s" file))
 	    (backup-file (concat p4-branch-backup-dir
 			       issue "-" timestamp
 			       "/" file)))
+
 	; Create all necessary directories to store the backup file.
 	(let ((backup-dir (mapconcat 'identity (butlast (split-string backup-file "/")) "/")))
 	  (make-directory backup-dir t))
@@ -393,19 +400,19 @@ This will result in an error if:
 
       ; Integrate the file to the bug branch.
       (let ((comp-stable-depot-path (format "//depot/cnuapp/comp/stable/%s" file))
+	    (base-file (get-base-file (format "/export/web/%s" file)))
 	    (dest-depot-path (concat "//depot/cnuapp/bug/" issue "_sparse/" file)))
 
-        ; TODO: Test this if the file isn't currently openned for edit.
         ; Revert each file to be branched.
-	(let ((revert-result (shell-command-to-string (format "p4 revert %s" comp-stable-depot-path))))
+	(let ((revert-result (shell-command-to-string (format "p4 revert %s" base-file))))
 	  (if (not (or (string-match (format "%s#[0-9]+ - was edit, reverted" file) revert-result)
 		       (string-match (format "%s - file(s) not opened on this client." file) revert-result)))
 	      (error "Failed: Unable to revert file %s.\nError: %s"
 		     file revert-result)))
 
 	; Remove the file from the workspace.
-	(let ((sync-result (shell-command-to-string (format "p4 sync %s#none" comp-stable-depot-path))))
-	  (if (not (string-match (format "%s#[0-9]+ - deleted as " comp-stable-depot-path)
+	(let ((sync-result (shell-command-to-string (format "p4 sync %s#none" base-file))))
+	  (if (not (string-match (format "#[0-9]+ - deleted as ")
 				 sync-result))
 	      (error "Failed: Unable to remove file %s from the workspace.\nError: %s"
 		     file sync-result)))
@@ -423,7 +430,7 @@ This will result in an error if:
 (defun p4-branch-post-submit (files issue timestamp)
   ""
   (dolist (file files)
-    (let ((local-file (format "/export/comp/stable/%s" file))
+    (let ((local-file (format "/export/web/%s" file))
 	  (backup-file (concat p4-branch-backup-dir
 				issue "-" timestamp
 				"/"
@@ -438,6 +445,7 @@ This will result in an error if:
 		   dest-depot-path edit-result)))
 
       ; Copy the files back into the source tree.
+	(message "about to copy: %s" (format "cp %s %s" backup-file local-file))
       (let ((copy-result (shell-command-to-string (format "cp %s %s" backup-file local-file))))
 	(if (/= 0 (length copy-result))
 	    (error "Failed: Unable to copy file %s from the backup directory (%s) into the source tree.\nError: %s"
