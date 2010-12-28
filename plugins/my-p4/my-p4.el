@@ -12,13 +12,18 @@
 
 ;; -------- General Helper Functions ----------
 
-(defun convert-web-to-comp-stable (file-path)
-  "Converts a file in /export/web/... to /export/comp/stable/...
-If the provided file is not under the /export/web/ directory it is
-returned unchanged."
-  (if (equal (substring file-path 0 12) "/export/web/")
-      (concat "/export/comp/stable/" (substring file-path 12))
-    file-path))
+;; Deprecated
+;(defun convert-web-to-comp-stable (file-path)
+;  "Converts a file in /export/web/... to /export/comp/stable/...
+;If the provided file is not under the /export/web/ directory it is
+;returned unchanged."
+;  (if (equal (substring file-path 0 12) "/export/web/")
+;      (concat "/export/comp/stable/" (substring file-path 12))
+;    file-path))
+
+(defun get-base-file (symlinked-file)
+  "Identifies the location of the base file for the provided symlinked file."
+  (shell-command-to-string (format "readlink -f %s" symlinked-file)))
 
 (defun clear-buffer (buffer-or-name)
   "Deletes all content from the provided buffer.
@@ -176,7 +181,7 @@ correspond to the provided key."
 An error is thrown in any of the following circumstances:
   - The p4 edit command on the file corresponding to this buffer fails."
   (interactive)
-  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
+  (let ((local-file (get-base-file (buffer-file-name))))
     ; Attempt to check-out the file
     (let ((edit-result (shell-command-to-string (format "p4 edit %s" local-file))))
       (if (string-match "#[0-9]+ - \\(opened\\|reopened\\) for edit" 
@@ -184,7 +189,8 @@ An error is thrown in any of the following circumstances:
           ; If successful, make the buffer read-only.
 	  (progn 
 	    (setq buffer-read-only nil)
-	    (message "Success: Checked out %s" local-file))
+	    (message "Success: Checked out %s" 
+		     (substring edit-result 0 (match-beginning 0))))
 	; If unsuccessful, throw an error.
 	(error "Failed: Unable to check out %s.\nError: %s" 
 	       local-file edit-result)))))
@@ -195,7 +201,7 @@ An error is thrown in any of the following circumstances:
 An error is thrown in any of the following circumstances:
   - The p4 revert command on the file corresponding to this buffer fails."
   (interactive)
-  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
+  (let ((local-file (get-base-file (buffer-file-name))))
     ; Attempt to check-out the file
     (let ((edit-result (shell-command-to-string (format "p4 revert %s" local-file))))
       (if (string-match "#[0-9]+ - was \\(edit\\|integrate\\|delete\\), reverted"
@@ -216,7 +222,7 @@ An error is thrown in any of the following circumstances:
   - The last revision of the current file cannot be identified.
   - The p4 integration from comp/stable to the current file fails."
   (interactive)
-  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
+  (let ((local-file (get-base-file (buffer-file-name))))
     ; Identify the currently synced revision and the comp/stable revision
     ; Attempt to integrate the corresponding file from comp/stable
     (let ((cur-sync-depot-file (p4-get-depot-path local-file))
@@ -249,9 +255,9 @@ as part of the active changelist.
 An error is thrown in any of the following circumstances:
   - The current buffer does not correspond to a file in the p4 client."
   (interactive)
-  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
+  (let ((local-file (get-base-file (buffer-file-name))))
     ; Verify that this file is in fact within the source tree.
-    (if (equal (substring local-file 0 20) "/export/comp/stable/")
+    (if (equal (substring local-file 0 8) "/export/")
 	(let ((rel-file-path (substring local-file 20))
 	      (files-to-branch (split-string (p4-state-get files-to-branch-key) ",")))
 	  ; Check if the file is already in the list.
@@ -272,7 +278,7 @@ files to be branched as part of the active changelist.
 An error is thrown in any of the following circumstances:
   - The current buffer does not correspond to a file in the p4 client."
   (interactive)
-  (let ((local-file (convert-web-to-comp-stable (buffer-file-name))))
+  (let ((local-file (get-base-file (buffer-file-name))))
     ; Verify that this file is in fact within the source tree.
     (if (equal (substring local-file 0 20) "/export/comp/stable/")
 	(let ((rel-file-path (substring local-file 20))
