@@ -250,12 +250,14 @@
 ;(add-to-list 'load-path "~/.emacs.d/plugins/emacs-rails")
 ;(require 'rails)
 
-(custom-set-faces
+
+;; This was messing up my default font, so I disabled it.
+;(custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "#2b2b2b" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 101 :width normal :foundry "unknown" :family "DejaVu Sans Mono")))))
+ ;'(default ((t (:inherit nil :stipple nil :background "#2b2b2b" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 101 :width normal :foundry "unknown" :family "DejaVu Sans Mono")))))
 
 (global-set-key (kbd "C-;") 'Control-X-prefix)
 
@@ -264,7 +266,9 @@
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+ '(column-number-mode t)
  '(show-paren-mode t)
+ '(tool-bar-mode nil)
  '(transient-mark-mode t))
 
 
@@ -285,3 +289,42 @@
 (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
 (add-hook 'shell-mode-hook
 	  'ansi-color-for-comint-mode-on)
+
+
+
+;; ---------------------  my-p4 -------------------------
+(add-to-list 'load-path "~/.emacs.d/plugins/my-p4")
+(require 'my-p4)
+
+;; Required settings for this plugin.
+(setq p4-user-name "hstrowd")
+(setq p4-client-name "hstrowd.cnuapp.dev")
+
+;; Key-bindings for P4 commands.
+(global-set-key (kbd "M-p M-e") 'p4-edit)
+(global-set-key (kbd "M-p M--") 'p4-revert)
+(global-set-key (kbd "M-p M-r") 'p4-rebase)
+
+(global-set-key (kbd "M-p M-m") 'p4-mark-to-branch)
+(global-set-key (kbd "M-p M-s") 'p4-show-files-to-branch)
+(global-set-key (kbd "M-p M-c") 'p4-clear-files-to-branch)
+
+(global-set-key (kbd "M-p M-b") 'p4-branch-files)
+
+
+;;------------------  cnuapp-utils-----------------------
+(add-to-list 'load-path "~/.emacs.d/plugins/cnuapp-utils")
+(require 'cnuapp-utils)
+
+(define-prefix-command 'cnu-command)
+(global-set-key (kbd "M-c") 'cnu-command)
+(global-set-key (kbd "M-c M-e") 'cnu-change-env)
+
+(global-set-key (kbd "M-c M-r") 'cnu-app-restart)
+(global-set-key (kbd "M-c M--") 'cnu-app-stop)
+(global-set-key (kbd "M-c M-+") 'cnu-app-start)
+
+(global-set-key (kbd "M-c M-a M-c") 'cnu-auto-clean-house)
+
+;; Dev utilities
+;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/
