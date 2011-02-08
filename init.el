@@ -285,12 +285,15 @@
 ;; Highlight marked regions.
 ;(transient-mark-mode)
 
-;; Properly formats emacs shell
+;; Properly formats emacs shell for color encoded text
 (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
 (add-hook 'shell-mode-hook
 	  'ansi-color-for-comint-mode-on)
 
 
+;; Use the ansi-color plugin
+(add-to-list 'load-path "~/.emacs.d/plugins/ansi-color")
+(require 'ansi-color)
 
 ;; ---------------------  my-p4 -------------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/my-p4")
@@ -312,7 +315,7 @@
 (global-set-key (kbd "M-p M-b") 'p4-branch-files)
 
 
-;;------------------  cnuapp-utils-----------------------
+;;------------------  cnuapp-utils ----------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/cnuapp-utils")
 (require 'cnuapp-utils)
 
@@ -328,3 +331,7 @@
 
 ;; Dev utilities
 ;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/
+(defun 'colorify ()
+  "Properly adds color to the current buffer."
+  (interactive)
+  (ansi-color-apply-on-region (point-min) (point-max)))
