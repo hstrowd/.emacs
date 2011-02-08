@@ -331,7 +331,7 @@
 
 ;; Dev utilities
 ;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/
-(defun 'colorify ()
+(defun colorify ()
   "Properly adds color to the current buffer."
   (interactive)
   (ansi-color-apply-on-region (point-min) (point-max)))
