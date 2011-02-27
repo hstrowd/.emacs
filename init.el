@@ -335,6 +335,9 @@
 
 (global-set-key (kbd "M-c M-a M-c") 'cnu-auto-clean-house)
 
+(global-set-key (kbd "M-c M-d M-d") 'cnu-connect-to-dev-db)
+(global-set-key (kbd "M-c M-p M-d") 'cnu-connect-to-prod-db)
+
 ;; Dev utilities
 ;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/
 (defun colorify ()
