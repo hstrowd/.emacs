@@ -295,6 +295,12 @@
 (add-to-list 'load-path "~/.emacs.d/plugins/ansi-color")
 (require 'ansi-color)
 
+
+;; ----------------- my-key-bindings --------------------
+
+(global-set-key (kbd "C-x C-d") 'dired)
+
+
 ;; ---------------------  my-p4 -------------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/my-p4")
 (require 'my-p4)
@@ -338,3 +344,6 @@
   "Properly adds color to the current buffer."
   (interactive)
   (ansi-color-apply-on-region (point-min) (point-max)))
+
+
+(add-to-list 'load-path "~/.emacs.d/local_init.el")
