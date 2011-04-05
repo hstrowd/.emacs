@@ -205,11 +205,6 @@
 
 (add-to-list 'auto-mode-alist '("\\.rhtml$" . rhtml-mode))
 
-;(add-to-list 'load-path "~/.emacs.d/plugins/auto-complete")
-;(require 'auto-complete-config)
-;(global-auto-complete-mode t)
-
-
 
 ;; Start completion when entered 3 characters
 ;(setq ac-auto-start 2)
@@ -301,6 +296,40 @@
 (global-set-key (kbd "C-x C-d") 'dired)
 
 
+;; Enable the auto-complete plugin
+(add-to-list 'load-path "~/.emacs.d/plugins/auto-complete")
+(require 'auto-complete-config)
+(global-auto-complete-mode t)
+;; start completion when entered 3 characters
+(setq ac-auto-start 3)
+
+;; Enable auto-completion for SQL
+(defvar ac-sql-interactive-modes '(sql-interactive-mode))
+(push 'sql-interactive-mode ac-modes)
+
+;; (defvar ac-source-sql-interactive '((candidates)))
+
+;; (defun ac-sql-keywords-setup ()
+;;   (message "running keyword setup")
+;;   (push 'ac-source-sql-keywords ac-sources))
+;; (defun ac-sql-keywords-initialize ()
+;;   (add-hook 'sql-interactive-mode-hook 'ac-sql-keywords-setup)
+;;   t)
+
+;; (ac-define-dictionary-source
+;;  ac-source-sql-keywords
+;;  '("SELECT" "FROM" "WHERE" "AND" "OR"))
+;; (ac-sql-keywords-initialize)
+
+
+;; TODO: extract this into a util plugin.
+(defun chomp (str)
+  "Chomp leading and tailing whitespace from STR."
+  (let ((s (if (symbolp str) (symbol-name str) str)))
+    (replace-regexp-in-string "\\(^[[:space:]\n]*\\|[[:space:]\n]*$\\)" "" s)))
+
+
+
 ;; ---------------------  my-p4 -------------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/my-p4")
 (require 'my-p4)
@@ -327,7 +356,8 @@
 
 (define-prefix-command 'cnu-command)
 (global-set-key (kbd "M-c") 'cnu-command)
-(global-set-key (kbd "M-c M-e") 'cnu-change-env)
+(global-set-key (kbd "M-c M-e") 'cnu-set-env)
+(global-set-key (kbd "M-c M-g M-e") 'cnu-get-env)
 
 (global-set-key (kbd "M-c M-r") 'cnu-app-restart)
 (global-set-key (kbd "M-c M--") 'cnu-app-stop)
@@ -337,6 +367,8 @@
 
 (global-set-key (kbd "M-c M-d M-d") 'cnu-connect-to-dev-db)
 (global-set-key (kbd "M-c M-p M-d") 'cnu-connect-to-prod-db)
+
+(global-set-key (kbd "M-c M-c") 'cnu-console)
 
 ;; Dev utilities
 ;; TODO: Write function to split the window vertically, open a shell, and cd to /export/web/cnuapp/

@@ -4,16 +4,28 @@
 (setq log-sub-dirs '(services.d space.d lsws.d))
 (setq cnuapp-dir "/export/web/cnuapp/")
 
-(defun cnu-change-env (country)
+(defun cnu-get-env ()
+  "Returns the current symlink for the /etc/cnu/cnu_env file."
+  (interactive)
+  (let ((result (shell-command-to-string "ls -la /etc/cnu/cnu_env")))
+    (if (string-match "/etc/cnu/cnu_env\\.[A-Z]+" result)
+	(let ((cluster-index (string-match "/etc/cnu/cnu_env\\.[A-Z]+" result)))
+	  (chomp (substring result (+ cluster-index 17))))
+      (error "FAILED: Unable to identify the current environment.\nLookup result: %s" result)
+      nil)))
+
+(defun cnu-set-env (country)
   "Changes the symlink for the /etc/cnu/cnu_env file to point
-to the requested country"
+to the requested country."
   (interactive "MCountry: ")
   (let ((country-file (format "/etc/cnu/cnu_env.%s" (upcase country))))
     (if (file-exists-p country-file)
 	(progn
-	  (call-process "ln" nil "*Message*" nil "-fs" country-file "/etc/cnu/cnu_env")
-	  (message "Success: Changed environment to %s" country-file))
-      (error "Failed: File '%s' does not exist." country-file))))
+	  (call-process "ln" nil "*Messages*" nil "-fs" country-file "/etc/cnu/cnu_env")
+	  (message "Success: Changed environment to %s" country-file)
+	  t)
+      (error "Failed: File '%s' does not exist." country-file)
+      nil)))
 
 ;; TODO: Finish this.
 (defun run-sudo-sv (cmd dir)
@@ -150,13 +162,18 @@ to the requested country"
 (defun cnu-connect-to-prod-db (db_suffix)
   "Establishes a connection to the specified production database."
   (interactive "MDB suffix: ")
+  (setq db_suffix (if (string= db_suffix "gb")
+		      "uk"
+		    (downcase db_suffix)))
+
   ; Set the DB connection settings.
   (setq sql-user "hstrowd"
 	sql-database (concat "cnuapp_prod_" db_suffix))
 
   ; Identify the server based on the requested database.
   (if (string= db_suffix "us")
-      (setq sql-server "slavedb3.cashnetusa.com")
+      (setq sql-server "slavedb3.cashnetusa.com"
+	    sql-database "cnuapp_prod")
     (if (string= db_suffix "uk")
 	(setq sql-server "slavedb.quickquid.co.uk")
       (if (string= db_suffix "au")
@@ -180,9 +197,15 @@ to the requested country"
 (defun cnu-connect-to-dev-db (db_suffix)
   "Establishes a connection to the specified development database."
   (interactive "MDB suffix: ")
+  (setq db_suffix (if (string= db_suffix "uk")
+		      "gb"
+		    (downcase db_suffix)))
+
   ; Set the DB connection settings.
   (setq sql-user "cnuapp"
-	sql-database (concat "cnuapp_dev_" db_suffix)
+	sql-database (if (string= db_suffix "us")
+			 "cnuapp_dev"
+		       (concat "cnuapp_dev_" db_suffix))
 	sql-server "localhost")
   ; Ensure the connection is created in a unique buffer.
   (if (not (get-buffer sql-database))
@@ -205,11 +228,35 @@ and product. Creates a new buffer for this connection with the provided database
 ;  (sql-interactive-mode)
   (sql-postgres)
   ; All done.
-  (rename-buffer buf-name)
-  (pop-to-buffer buf-name))
+  (rename-buffer buf-name))
 
 ;; TODO: create a function for selecting the current sql-buffer.
 
+
+;; Console Utilities
+(defun cnu-console (cluster)
+  "Starts a cnuapp console for the specified cluster."
+  (interactive "MCluster: ")
+
+  ; Identify the requested environment.
+  (setq cur-env (cnu-get-env))
+  (if (not (cnu-set-env (upcase cluster)))
+      (error "FAILED: Unable to set the environment to cluster %s." cluster)
+    ; Identify the name of the buffer to be used for this console.
+    (setq buf-name (concat cluster "_console"))
+    (if (get-buffer buf-name)
+	(progn
+	  (setq index 1)
+	  (while (get-buffer (concat buf-name (number-to-string index)))
+	    (setq index (1+ index)))
+	  (setq buf-name (concat buf-name (number-to-string index)))))
+
+    ; Start the console.
+    (shell (get-buffer-create buf-name))
+    (pop-to-buffer buf-name)
+    (process-send-string nil "/export/web/cnuapp/script/console\n")
+    (sleep-for 4)
+    (cnu-set-env cur-env)))
 
 (provide 'cnuapp-utils)
 

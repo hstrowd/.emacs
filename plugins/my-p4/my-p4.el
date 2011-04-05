@@ -45,11 +45,6 @@ current buffer."
     (while (re-search-forward text nil t)
       (replace-match replacement nil t))))
 
-(defun chomp (str)
-  "Chomp leading and tailing whitespace from STR."
-  (let ((s (if (symbolp str) (symbol-name str) str)))
-    (replace-regexp-in-string "\\(^[[:space:]\n]*\\|[[:space:]\n]*$\\)" "" s)))
-
 (defun p4-get-depot-path (local-file)
   "Identifies the full depot path of the latest revision synced of the provided file.
 
