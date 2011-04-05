@@ -378,4 +378,6 @@
   (ansi-color-apply-on-region (point-min) (point-max)))
 
 
-(add-to-list 'load-path "~/.emacs.d/local_init.el")
+;--------------------- local settings -----------------------
+(add-to-list 'load-path "~/.emacs.d")
+(require 'local_init)
