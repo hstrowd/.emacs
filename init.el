@@ -107,6 +107,15 @@
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
+
+;; Use php-mode
+(add-to-list 'load-path "~/.emacs.d/plugins/php-mode")
+(require 'php-mode)
+(add-to-list 'auto-mode-alist '("\\.php$" . php-mode))
+(add-to-list 'auto-mode-alist '("\\.module$" . php-mode))
+(add-to-list 'auto-mode-alist '("\\.inc$" . php-mode))
+
+
 ;; Use the flymake plugin
 ;(add-to-list  'load-path "~/.emacs.d/plugins/flymake")
 ;(require 'flymake)
