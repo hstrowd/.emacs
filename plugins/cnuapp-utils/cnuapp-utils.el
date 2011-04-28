@@ -147,12 +147,17 @@ to the requested country"
 ;; Database Utilities
 (require 'sql)
 
+(add-to-list 'load-path "~/.emacs.d/plugins/sql-utils")
+(require 'sql-utils)
+
 (defun cnu-connect-to-prod-db (db_suffix)
   "Establishes a connection to the specified production database."
   (interactive "MDB suffix: ")
   ; Set the DB connection settings.
   (setq sql-user "hstrowd"
-	sql-database (concat "cnuapp_prod_" db_suffix))
+	sql-database (if (string= db_suffix "us")
+			 "cnuapp_prod"
+		       (concat "cnuapp_prod_" db_suffix)))
 
   ; Identify the server based on the requested database.
   (if (string= db_suffix "us")
@@ -167,15 +172,9 @@ to the requested country"
 	      (setq sql-server "slavedbjv.cashnetusa.com")
 	    (error "FAILURE: Unable to identify the server based on the provided db_siffix"))))))
 
-  ; Ensure the connection is created in a unique buffer.
-  (if (not (get-buffer sql-database))
-      (setq buf-name sql-database)
-    (setq index 1)
-    (while (get-buffer (concat sql-database (number-to-string index)))
-      (setq index (1+ index)))
-    (setq buf-name (concat sql-database (number-to-string index))))
   ; Connect to the DB.
-  (connect-to-db buf-name))
+  (connect-to-psql-db sql-database))
+
 
 (defun cnu-connect-to-dev-db (db_suffix)
   "Establishes a connection to the specified development database."
@@ -184,29 +183,9 @@ to the requested country"
   (setq sql-user "cnuapp"
 	sql-database (concat "cnuapp_dev_" db_suffix)
 	sql-server "localhost")
-  ; Ensure the connection is created in a unique buffer.
-  (if (not (get-buffer sql-database))
-      (setq buf-name sql-database)
-    (setq index 1)
-    (while (get-buffer (concat sql-database (number-to-string index)))
-      (setq index (1+ index)))
-    (setq buf-name (concat sql-database (number-to-string index))))
   ; Connect to the DB.
-  (connect-to-db buf-name))
+  (connect-to-psql-db sql-database))
 
-(defun connect-to-db (buf-name)
-  "Connects to the postgres database specified by sql-user, sql-database, sql-server, 
-and product. Creates a new buffer for this connection with the provided database name."
-  ;; FIXME: This was taken from http://stackoverflow.com/questions/2513686/how-do-i-create-an-emacs-sql-buffer but didn't work.
-  ; Connect to database.
-;  (funcall (sql-product-feature :sqli-connect product))
-  ; Set SQLi mode.
-;  (setq sql-interactive-product product)
-;  (sql-interactive-mode)
-  (sql-postgres)
-  ; All done.
-  (rename-buffer buf-name)
-  (pop-to-buffer buf-name))
 
 ;; TODO: create a function for selecting the current sql-buffer.
 

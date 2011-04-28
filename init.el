@@ -268,8 +268,7 @@
   ;; If there is more than one, they won't work right.
  '(column-number-mode t)
  '(show-paren-mode t)
- '(tool-bar-mode nil)
- '(transient-mark-mode t))
+ '(tool-bar-mode nil))
 
 
 ;;; This was installed by package-install.el.
@@ -348,4 +347,10 @@
 
 ;--------------------- local settings -----------------------
 (add-to-list 'load-path "~/.emacs.d")
-(require 'local_init)
+(require 'local-init)
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ )
