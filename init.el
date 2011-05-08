@@ -20,10 +20,11 @@
 (push '(font-backend xft x) default-frame-alist)
 
 ;; Get rid of toolbar, scrollbar, menubar
-(progn
-  (tool-bar-mode)
+;; Failing on OSX. Not sure why.
+;(progn
+;  (tool-bar-mode)
 ;  (menu-bar-mode)
-  (scroll-bar-mode))
+;  (scroll-bar-mode))
 
 ;; Use the TextMate plugin
 ;; TextMate automatically completes characters like ', ", [, {, or (
@@ -254,16 +255,15 @@
   ;; If there is more than one, they won't work right.
  ;'(default ((t (:inherit nil :stipple nil :background "#2b2b2b" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 101 :width normal :foundry "unknown" :family "DejaVu Sans Mono")))))
 
-(global-set-key (kbd "C-;") 'Control-X-prefix)
-
 (custom-set-variables
   ;; custom-set-variables was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
  '(column-number-mode t)
- '(show-paren-mode t)
- '(tool-bar-mode nil))
+ '(show-paren-mode t))
+;; This is failing on my OSX machine. Not sure why.
+; '(tool-bar-mode nil))
 
 
 ;;; This was installed by package-install.el.
@@ -291,6 +291,8 @@
 
 
 ;; ----------------- my-key-bindings --------------------
+
+(global-set-key (kbd "C-q") 'Control-X-prefix)
 
 (global-set-key (kbd "C-x C-d") 'dired)
 
