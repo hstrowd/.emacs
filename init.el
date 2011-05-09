@@ -277,7 +277,7 @@
   (package-initialize))
 
 ;; Highlight marked regions.
-;(transient-mark-mode)
+(transient-mark-mode)
 
 ;; Properly formats emacs shell for color encoded text
 (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
@@ -335,7 +335,6 @@
 
 ;; Required settings for this plugin.
 (setq p4-user-name "hstrowd")
-(setq p4-client-name "hstrowd.cnuapp.dev")
 
 ;; Key-bindings for P4 commands.
 (global-set-key (kbd "M-p M-e") 'p4-edit)
@@ -380,6 +379,8 @@
 ;--------------------- local settings -----------------------
 (add-to-list 'load-path "~/.emacs.d")
 (require 'local-init)
+
+
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
