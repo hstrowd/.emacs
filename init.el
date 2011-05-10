@@ -26,6 +26,9 @@
 ;  (menu-bar-mode)
 ;  (scroll-bar-mode))
 
+;; Disable the menu bar
+(menu-bar-mode -1)
+
 ;; Use the TextMate plugin
 ;; TextMate automatically completes characters like ', ", [, {, or (
 ;; This is very annoying.
