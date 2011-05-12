@@ -21,10 +21,10 @@
 
 ;; Get rid of toolbar, scrollbar, menubar
 ;; Failing on OSX. Not sure why.
-;(progn
-;  (tool-bar-mode)
-;  (menu-bar-mode)
-;  (scroll-bar-mode))
+(progn
+  (tool-bar-mode)
+  (menu-bar-mode)
+  (scroll-bar-mode))
 
 ;; Disable the menu bar
 (menu-bar-mode -1)
