@@ -11,7 +11,7 @@
     (if (string-match "/etc/cnu/cnu_env\\.[A-Z]+" result)
 	(let ((cluster-index (string-match "/etc/cnu/cnu_env\\.[A-Z]+" result)))
 	  (chomp (substring result (+ cluster-index 17))))
-      (error "FAILED: Unable to identify the current environment.\nLookup result: %s" result)
+      (message "FAILED: Unable to identify the current environment.\nLookup result: %s" result)
       nil)))
 
 (defun cnu-set-env (country)
@@ -24,7 +24,7 @@ to the requested country."
 	  (call-process "ln" nil "*Messages*" nil "-fs" country-file "/etc/cnu/cnu_env")
 	  (message "Success: Changed environment to %s" country-file)
 	  t)
-      (error "Failed: File '%s' does not exist." country-file)
+      (message "FAILED: File '%s' does not exist." country-file)
       nil)))
 
 ;; TODO: Finish this.
@@ -220,22 +220,83 @@ to the requested country."
   ; Identify the requested environment.
   (setq cur-env (cnu-get-env))
   (if (not (cnu-set-env (upcase cluster)))
-      (error "FAILED: Unable to set the environment to cluster %s." cluster)
-    ; Identify the name of the buffer to be used for this console.
-    (setq buf-name (concat cluster "_console"))
-    (if (get-buffer buf-name)
-	(progn
-	  (setq index 1)
-	  (while (get-buffer (concat buf-name (number-to-string index)))
-	    (setq index (1+ index)))
-	  (setq buf-name (concat buf-name (number-to-string index)))))
+      (progn
+	(message "Warning: Unable to set the environment to cluster %s. Using the current environment %s." 
+	       cluster cur-env)
+	(setq cluster cur-env)))
 
-    ; Start the console.
-    (shell (get-buffer-create buf-name))
-    (pop-to-buffer buf-name)
-    (process-send-string nil "/export/web/cnuapp/script/console\n")
-    (sleep-for 4)
-    (cnu-set-env cur-env)))
+  ; Identify the name of the buffer to be used for this console.
+  (setq buf-name (get-unique-buffer-name (concat cluster "_console")))
+  
+  ; Start the console.
+  (shell (get-buffer-create buf-name))
+  (pop-to-buffer buf-name)
+  (process-send-string nil "/export/web/cnuapp/script/console\n")
+  (sleep-for 4)
+  (cnu-set-env cur-env))
+
+
+(defun get-unique-buffer-name (buf-name)
+  "Finds a unique name for a buffer by returning the provided name, if it does not 
+conflict with an existing buffer, or by adding an index to the end of the buf-name
+to make it unique."
+  (if (get-buffer buf-name)
+      (progn
+	(setq index 1)
+	(while (get-buffer (concat buf-name (number-to-string index)))
+	  (setq index (1+ index)))
+	(concat buf-name (number-to-string index)))
+    buf-name))
+
+
+
+;; Setups buffers I use for cnuapp development:
+;;  - htop
+;;  - shell
+;;  - tests
+;;  - console(for current env)
+;;  - log
+(defun cnu-setup-env ()
+  "Setups buffers for cnuapp development."
+  (interactive)
+  (create-htop-buffer)
+  (cnu-console "")
+  (create-test-buffer)
+  (create-term-buffer)
+  (create-log-buffer))
+
+(defun create-htop-buffer ()
+  "Creates a new shell buffer, naming it 'htop(<index>)?', and runs htop in that
+buffer."
+  (interactive)
+  (setq buf-name (get-unique-buffer-name "htop"))
+  (shell (get-buffer-create buf-name))
+  (pop-to-buffer buf-name)
+  (process-send-string nil "htop\n"))
+
+(defun create-test-buffer ()
+  "Creates a new shell buffer, naming it 'test-shell(<index>)?'."
+  (interactive)
+  (setq buf-name (get-unique-buffer-name "test-shell"))
+  (shell (get-buffer-create buf-name))
+  (pop-to-buffer buf-name))
+
+(defun create-term-buffer ()
+  "Creates a new shell buffer, naming it 'shell(<index>)?'."
+  (interactive)
+  (setq buf-name (get-unique-buffer-name "shell"))
+  (term "/bin/bash")
+  (pop-to-buffer "*terminal*")
+  (term-line-mode)
+  (rename-buffer buf-name))
+
+(defun create-log-buffer ()
+  "Creates a new shell buffer, naming it 'log(<index>)?'."
+  (interactive)
+  (setq buf-name (get-unique-buffer-name "log"))
+  (shell (get-buffer-create buf-name))
+  (pop-to-buffer buf-name)
+  (process-send-string nil "tail -f /var/log/cnuapp/frontend.log\n"))
 
 (provide 'cnuapp-utils)
 

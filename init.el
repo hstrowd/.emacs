@@ -19,15 +19,10 @@
 ;; Get back font antialiasing
 (push '(font-backend xft x) default-frame-alist)
 
-;; Get rid of toolbar, scrollbar, menubar
-;; Failing on OSX. Not sure why.
+;; Get rid of toolbar and scrollbar
 (progn
   (tool-bar-mode)
-  (menu-bar-mode)
   (scroll-bar-mode))
-
-;; Disable the menu bar
-(menu-bar-mode -1)
 
 ;; Use the TextMate plugin
 ;; TextMate automatically completes characters like ', ", [, {, or (
@@ -371,6 +366,7 @@
 (global-set-key (kbd "M-c M-d M-d") 'cnu-connect-to-dev-db)
 (global-set-key (kbd "M-c M-p M-d") 'cnu-connect-to-prod-db)
 
+(global-set-key (kbd "M-c M-s") 'cnu-setup-env)
 (global-set-key (kbd "M-c M-c") 'cnu-console)
 
 ;; Dev utilities
