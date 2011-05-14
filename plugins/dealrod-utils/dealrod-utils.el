@@ -11,9 +11,9 @@
   "Establishes a connection to the database"
   (interactive)
 
-  (setq sql-user "dealrod_prep"
-	sql-password "dealrod"
-	sql-database "dealrod_prep"
+  (setq sql-user "dealrod_user"
+	sql-password "dealrod1"
+	sql-database "dealrod_dev"
 	sql-server "localhost")
 
   ; Connect to the DB.
