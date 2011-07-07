@@ -366,9 +366,9 @@
 (global-set-key (kbd "M-c M-e") 'cnu-set-env)
 (global-set-key (kbd "M-c M-g M-e") 'cnu-get-env)
 
-(global-set-key (kbd "M-c M-r") 'cnu-app-restart)
-(global-set-key (kbd "M-c M--") 'cnu-app-stop)
-(global-set-key (kbd "M-c M-+") 'cnu-app-start)
+(global-set-key (kbd "M-c M-r") 'cnu-restart-app)
+(global-set-key (kbd "M-c M--") 'cnu-stop-app)
+(global-set-key (kbd "M-c M-+") 'cnu-start-app)
 
 (global-set-key (kbd "M-c M-a M-c") 'cnu-auto-clean-house)
 

@@ -259,20 +259,10 @@ to make it unique."
 (defun cnu-setup-env ()
   "Setups buffers for cnuapp development."
   (interactive)
-  (create-htop-buffer)
+  (create-log-buffer)
   (cnu-console "")
   (create-test-buffer)
-  (create-term-buffer)
-  (create-log-buffer))
-
-(defun create-htop-buffer ()
-  "Creates a new shell buffer, naming it 'htop(<index>)?', and runs htop in that
-buffer."
-  (interactive)
-  (setq buf-name (get-unique-buffer-name "htop"))
-  (shell (get-buffer-create buf-name))
-  (pop-to-buffer buf-name)
-  (process-send-string nil "htop\n"))
+  (create-shell-buffer))
 
 (defun create-test-buffer ()
   "Creates a new shell buffer, naming it 'test-shell(<index>)?'."
@@ -289,6 +279,12 @@ buffer."
   (pop-to-buffer "*terminal*")
   (term-line-mode)
   (rename-buffer buf-name))
+
+(defun create-shell-buffer ()
+  "Creates a new shell buffer, naming it 'shell(<index>)?'."
+  (interactive)
+  (setq buf-name (get-unique-buffer-name "shell"))
+  (shell (get-buffer-create buf-name)))
 
 (defun create-log-buffer ()
   "Creates a new shell buffer, naming it 'log(<index>)?'."
