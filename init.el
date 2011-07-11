@@ -21,7 +21,7 @@
 
 ;; Get rid of toolbar and scrollbar
 (progn
-  (tool-bar-mode)
+;  (tool-bar-mode)
   (scroll-bar-mode))
 
 ;; Use the TextMate plugin
@@ -284,7 +284,7 @@
   (package-initialize))
 
 ;; Highlight marked regions.
-(transient-mark-mode)
+(transient-mark-mode t)
 
 ;; Properly formats emacs shell for color encoded text
 (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
@@ -295,6 +295,12 @@
 ;; Use the ansi-color plugin
 (add-to-list 'load-path "~/.emacs.d/plugins/ansi-color")
 (require 'ansi-color)
+
+
+;; Required for meta commands to work on my Mac OS X
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
 
 
 ;; ----------------- my-key-bindings --------------------
