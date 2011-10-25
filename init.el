@@ -1,6 +1,10 @@
 ;; to find unbalanced parens -- go to the end of the file and type C-u C-M-u.
 ;; This will move you to the beginning of the first defun that is unbalanced.
 
+   ;;; A quick & ugly PATH solution to Emacs on Mac OSX
+   (if (string-equal "darwin" (symbol-name system-type))
+      (setenv "PATH" (shell-command-to-string "source ~/.bashrc; echo $PATH")))
+
 (setq major-mode 'text-mode)
 
 ;; Turn on paren matching
@@ -379,6 +383,7 @@
 (global-set-key (kbd "M-c M-a M-c") 'cnu-auto-clean-house)
 
 (global-set-key (kbd "M-c M-d M-d") 'cnu-connect-to-dev-db)
+(global-set-key (kbd "M-c M-l M-d") 'cnu-connect-to-local-db)
 (global-set-key (kbd "M-c M-p M-d") 'cnu-connect-to-prod-db)
 
 (global-set-key (kbd "M-c M-s") 'cnu-setup-env)
