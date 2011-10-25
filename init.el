@@ -363,6 +363,11 @@
 (global-set-key (kbd "M-p M-b") 'p4-branch-files)
 
 
+;;--------------------- magit -------------------------
+
+(add-to-list 'load-path "~/.emacs.d/plugins/magit-1.0.0")
+(require 'magit)
+
 ;;------------------  cnuapp-utils ----------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/cnuapp-utils")
 (require 'cnuapp-utils)
