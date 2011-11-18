@@ -5,6 +5,10 @@
     (set-keyboard-coding-system 'utf-8)
     (prefer-coding-system 'utf-8)
 
+   ;;; A quick & ugly PATH solution to Emacs on Mac OSX
+   (if (string-equal "darwin" (symbol-name system-type))
+      (setenv "PATH" (shell-command-to-string "source ~/.bashrc; echo $PATH")))
+
 (setq major-mode 'text-mode)
 
 ;; Turn on paren matching
@@ -25,7 +29,7 @@
 
 ;; Get rid of toolbar and scrollbar
 (progn
-  (tool-bar-mode)
+;  (tool-bar-mode)
   (scroll-bar-mode))
 
 ;; Use the TextMate plugin
@@ -288,7 +292,7 @@
   (package-initialize))
 
 ;; Highlight marked regions.
-(transient-mark-mode)
+(transient-mark-mode t)
 
 ;; Properly formats emacs shell for color encoded text
 (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
@@ -299,6 +303,12 @@
 ;; Use the ansi-color plugin
 (add-to-list 'load-path "~/.emacs.d/plugins/ansi-color")
 (require 'ansi-color)
+
+
+;; Required for meta commands to work on my Mac OS X
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
 
 
 ;; ----------------- my-key-bindings --------------------
@@ -361,6 +371,11 @@
 (global-set-key (kbd "M-p M-b") 'p4-branch-files)
 
 
+;;--------------------- magit -------------------------
+
+(add-to-list 'load-path "~/.emacs.d/plugins/magit-1.0.0")
+(require 'magit)
+
 ;;------------------  cnuapp-utils ----------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/cnuapp-utils")
 (require 'cnuapp-utils)
@@ -378,6 +393,7 @@
 (global-set-key (kbd "M-c M-a M-c") 'cnu-auto-clean-house)
 
 (global-set-key (kbd "M-c M-d M-d") 'cnu-connect-to-dev-db)
+(global-set-key (kbd "M-c M-l M-d") 'cnu-connect-to-local-db)
 (global-set-key (kbd "M-c M-p M-d") 'cnu-connect-to-prod-db)
 
 (global-set-key (kbd "M-c M-s") 'cnu-setup-env)

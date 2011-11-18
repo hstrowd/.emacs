@@ -193,7 +193,7 @@ to the requested country."
   (connect-to-psql-db sql-database))
 
 
-(defun cnu-connect-to-dev-db (db_suffix)
+(defun cnu-connect-to-local-db (db_suffix)
   "Establishes a connection to the specified development database."
   (interactive "MDB suffix: ")
   (setq db_suffix (if (string= db_suffix "uk")
@@ -206,6 +206,24 @@ to the requested country."
 			 "cnuapp_dev"
 		       (concat "cnuapp_dev_" db_suffix))
 	sql-server "localhost")
+  ; Connect to the DB.
+  (connect-to-psql-db sql-database))
+
+
+(defun cnu-connect-to-dev-db (db_suffix)
+  "Establishes a connection to the specified development database."
+  (interactive "MDB suffix: ")
+  (setq db_suffix (if (string= db_suffix "uk")
+		      "gb"
+		    (downcase db_suffix)))
+
+  ; Set the DB connection settings.
+  (setq sql-user "cnuapp"
+        sql-password "cnuxappydev"
+	sql-database (if (string= db_suffix "us")
+			 "cnuapp_dev"
+		       (concat "cnuapp_dev_" db_suffix))
+	sql-server "hstrowd-dev.chi.cashnetusa.com")
   ; Connect to the DB.
   (connect-to-psql-db sql-database))
 
