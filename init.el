@@ -1,6 +1,10 @@
 ;; to find unbalanced parens -- go to the end of the file and type C-u C-M-u.
 ;; This will move you to the beginning of the first defun that is unbalanced.
 
+    (set-terminal-coding-system 'utf-8)
+    (set-keyboard-coding-system 'utf-8)
+    (prefer-coding-system 'utf-8)
+
    ;;; A quick & ugly PATH solution to Emacs on Mac OSX
    (if (string-equal "darwin" (symbol-name system-type))
       (setenv "PATH" (shell-command-to-string "source ~/.bashrc; echo $PATH")))
@@ -378,6 +382,7 @@
 (add-to-list 'load-path "~/.emacs.d/plugins/cnuapp-utils")
 (require 'cnuapp-utils)
 
+(setq x-alt-keysym 'meta)
 (define-prefix-command 'cnu-command)
 (global-set-key (kbd "M-c") 'cnu-command)
 (global-set-key (kbd "M-c M-e") 'cnu-set-env)

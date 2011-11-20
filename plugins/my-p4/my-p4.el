@@ -206,10 +206,7 @@ An error is thrown in any of the following circumstances:
       (if (string-match "#[0-9]+ - was \\(edit\\|integrate\\|delete\\), reverted"
 			edit-result)
           ; If successful, make the buffer read-only.
-	  (progn 
-	    (setq buffer-read-only t)
-	    (revert-buffer t t)
-	    (message "Success: Reverted %s" local-file))
+	  (message "Success: Reverted %s" local-file)
 	; If unsuccessful, throw an error.
 	(error "Failed: Unable to revert %s.\nError: %s" 
 	       local-file edit-result)))))
@@ -376,6 +373,7 @@ This will result in an error if:
 (defun p4-branch-pre-submit (files issue changelist timestamp)
   ""
   (dolist (file files)
+    ; TODO: Check that /export/web/ maps to /export/comp/stable/
     ; Backup the file by copying it into a temporary location.
       (let ((local-file (format "/export/web/%s" file))
 	    (backup-file (concat p4-branch-backup-dir
