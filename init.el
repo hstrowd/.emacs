@@ -372,6 +372,8 @@
 (add-to-list 'load-path "~/.emacs.d/plugins/magit-1.0.0")
 (require 'magit)
 
+(global-set-key (kbd "M-g M-s") 'magit-status)
+
 ;;------------------  cnuapp-utils ----------------------
 (add-to-list 'load-path "~/.emacs.d/plugins/cnuapp-utils")
 (require 'cnuapp-utils)
